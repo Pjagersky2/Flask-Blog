@@ -1,4 +1,5 @@
-from flaskblog import app, db, Post, User
+from flaskblog import app, db
+from flaskblog.models import Post, User
 
 with app.app_context():
     db.create_all()
