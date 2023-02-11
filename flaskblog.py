@@ -37,7 +37,7 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     def __repr__(self):
-        return f"Post({self.title!r}, {self.date_posted!r})"
+        return f"Post({self.title!r}, {self.date_posted})"
 
 
 posts = [
