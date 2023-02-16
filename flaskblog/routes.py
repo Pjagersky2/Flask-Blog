@@ -1,7 +1,7 @@
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from flaskblog import app, db, bcrypt
-from flaskblog.forms import LoginForm, RegistrationForm
+from flaskblog.forms import LoginForm, RegistrationForm, UpdateAccountForm
 from flaskblog.models import Post, User
 
 with app.app_context():
@@ -135,16 +135,29 @@ def logout() -> str:
     return redirect(url_for("home"))
 
 
-@app.route("/account")
+@app.route("/account", methods=["GET", "POST"])
 @login_required
 def account() -> str:
     """
-    Handle user account,
+    Handle user account.
 
-    This function handles user accounts and .
+    This function handles user accounts.
 
     Returns:
-        str: A redirect for the home page.
+        str: A render template for the account page.
     """
 
-    return render_template("account.html", title="account")
+    form = UpdateAccountForm()
+    if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        db.session.commit()
+        flash("your account has been updated!", "success")
+        return redirect(url_for("account"))
+    elif request.method == "GET":
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+
+    image_file = url_for("static", filename="profile_pics/" + current_user.image_file)
+
+    return render_template("account.html", title="Account", image_file=image_file, form=form)
