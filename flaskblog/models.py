@@ -21,6 +21,16 @@ class User(db.Model, UserMixin):
     posts = db.relationship("Post", backref="author", lazy=True)
 
     def __repr__(self):
+        """
+        Represents the User as a string.
+
+        When the user object is printed it states username, email, and
+        image file.
+
+        Returns:
+            str: The user's username, email, and image file.
+        """
+
         return f"User({self.username!r}, {self.email!r}, {self.image_file!r})"
 
 
@@ -33,4 +43,13 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     def __repr__(self):
+        """
+        Represents the Post as a string.
+
+        When the user object is printed it states title and date posted.
+
+        Returns:
+            str: The post's title and date posted.
+        """
+
         return f"Post({self.title!r}, {self.date_posted})"

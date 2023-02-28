@@ -1,5 +1,8 @@
+import os
+import secrets
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
+from PIL import Image
 from flaskblog import app, db, bcrypt
 from flaskblog.forms import LoginForm, RegistrationForm, UpdateAccountForm
 from flaskblog.models import Post, User
@@ -25,7 +28,7 @@ posts = [
 
 @app.route("/")
 @app.route("/home")  # both paths take you to the same place
-def home() -> str:
+def home() -> render_template:
     """
     Handle the home page.
 
@@ -33,14 +36,14 @@ def home() -> str:
     template for the home page.
 
     Returns:
-        str: A rendered template for the home page.
+        function: A rendered template for the home page.
     """
 
     return render_template("home.html", posts=posts)
 
 
 @app.route("/about")
-def about() -> str:
+def about() -> render_template:
     """
     Handle the about page.
 
@@ -48,7 +51,7 @@ def about() -> str:
     template for the about page.
 
     Returns:
-        str: A rendered template for the about page.
+        function: A rendered template for the about page.
     """
 
     return render_template("about.html", title="about")
@@ -63,8 +66,8 @@ def register() -> str:
     template for the registration page.
 
     Returns:
-        str: A redirect  for the login page.
-        str: A rendered template for the registration page.
+        str: A url redirect for the login page.
+        function: A rendered template for the registration page.
     """
 
     if current_user.is_authenticated:
@@ -97,7 +100,7 @@ def login() -> str:
     template for the login page.
 
     Returns:
-        str: A redirect template for the home page.
+        str: A url redirect template for the home page.
         str: A rendered template for the login page.
     """
 
@@ -128,11 +131,39 @@ def logout() -> str:
     This function handles user logout and redirects them to the home page.
 
     Returns:
-        str: A redirect for the home page.
+        function: A url redirect for the home page.
     """
 
     logout_user()
     return redirect(url_for("home"))
+
+
+def save_picture(form_picture) -> str:
+    """
+    Save the user's uploaded picture.
+
+    This function will save a picture that a user has uploaded and change
+    the name.
+
+    Args:
+        form_picture (str): the picture uploaded by the user.
+
+    Returns:
+        str: the filename of the user's uploaded picture.
+    """
+
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext
+    picture_path = os.path.join(app.root_path, "static/profile_pics",
+                                picture_fn)
+
+    output_size = (125, 125)
+    i = Image.open(form_picture)
+    i.thumbnail(output_size)
+    i.save(picture_path)
+
+    return picture_fn
 
 
 @app.route("/account", methods=["GET", "POST"])
@@ -144,11 +175,14 @@ def account() -> str:
     This function handles user accounts.
 
     Returns:
-        str: A render template for the account page.
+        function: A render template for the account page.
     """
 
     form = UpdateAccountForm()
     if form.validate_on_submit():
+        if form.picture.data:
+            picture_file = save_picture(form.picture.data)
+            current_user.image_file = picture_file
         current_user.username = form.username.data
         current_user.email = form.email.data
         db.session.commit()

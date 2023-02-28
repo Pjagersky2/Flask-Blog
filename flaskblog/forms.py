@@ -1,5 +1,6 @@
 from flask_login import current_user
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField
 from wtforms import BooleanField, PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
 
@@ -24,7 +25,7 @@ class RegistrationForm(FlaskForm):
 
     submit = SubmitField("Sign Up")
 
-    def validate_username(self, username):
+    def validate_username(self, username) -> None:
         """
         Validate that the username is not taken.
 
@@ -36,7 +37,7 @@ class RegistrationForm(FlaskForm):
         if user:
             raise ValidationError("Error: Username is already taken.")
 
-    def validate_email(self, email):
+    def validate_email(self, email) -> None:
         """
         Validate that the username is not taken.
 
@@ -73,10 +74,11 @@ class UpdateAccountForm(FlaskForm):
                                                    Length(min=2,
                                                           max=20)])
     email = StringField("Email", validators=[DataRequired(), Email()])
-    password = PasswordField("Password", validators=[DataRequired()])
+    picture = FileField("Update Profile Picture", validators=[FileAllowed([
+        "jpg", "png"])])
     submit = SubmitField("Update")
 
-    def validate_username(self, username):
+    def validate_username(self, username) -> None:
         """
         Validate that the username is not taken.
 
@@ -89,7 +91,7 @@ class UpdateAccountForm(FlaskForm):
             if user:
                 raise ValidationError("That username is taken.  Please choose a different username.")
 
-    def validate_email(self, email):
+    def validate_email(self, email) -> None:
         """
         Validate that the username is not taken.
 
