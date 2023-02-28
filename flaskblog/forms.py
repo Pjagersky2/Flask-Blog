@@ -1,4 +1,6 @@
+from flask_login import current_user
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField
 from wtforms import BooleanField, PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
 
@@ -23,7 +25,7 @@ class RegistrationForm(FlaskForm):
 
     submit = SubmitField("Sign Up")
 
-    def validate_username(self, username):
+    def validate_username(self, username) -> None:
         """
         Validate that the username is not taken.
 
@@ -35,7 +37,7 @@ class RegistrationForm(FlaskForm):
         if user:
             raise ValidationError("Error: Username is already taken.")
 
-    def validate_email(self, email):
+    def validate_email(self, email) -> None:
         """
         Validate that the username is not taken.
 
@@ -59,3 +61,44 @@ class LoginForm(FlaskForm):
     remember = BooleanField("Remember me")
     password = PasswordField("Password", validators=[DataRequired()])
     submit = SubmitField("Login")
+
+
+class UpdateAccountForm(FlaskForm):
+    """
+    Update the account form.
+
+    Specify what fields are required for a user to update their account.
+    """
+
+    username = StringField("Username", validators=[DataRequired(),
+                                                   Length(min=2,
+                                                          max=20)])
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    picture = FileField("Update Profile Picture", validators=[FileAllowed([
+        "jpg", "png"])])
+    submit = SubmitField("Update")
+
+    def validate_username(self, username) -> None:
+        """
+        Validate that the username is not taken.
+
+        Query the database to validate that the input username is unique.
+
+        """
+
+        if username.data != current_user.username:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError("That username is taken.  Please choose a different username.")
+
+    def validate_email(self, email) -> None:
+        """
+        Validate that the username is not taken.
+
+        Query the database to validate that the input email is unique.
+        """
+
+        if email.data != current_user.email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError("That email is taken.  Please choose a different email.")
