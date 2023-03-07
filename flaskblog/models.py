@@ -1,10 +1,9 @@
 from datetime import datetime
-
+from flask import current_app
 from authlib.jose import jwt
 from authlib.jose.errors import JoseError
 from flask_login import UserMixin
-
-from flaskblog import app, db, login_manager
+from flaskblog import db, login_manager
 
 
 @login_manager.user_loader
@@ -22,7 +21,7 @@ class User(db.Model, UserMixin):
 
     posts = db.relationship("Post", backref="author", lazy=True)
 
-    def get_reset_token(self, expires_sec=1800):
+    def get_reset_token(self):
         """
         Create password reset token.
 
@@ -31,13 +30,14 @@ class User(db.Model, UserMixin):
 
         header = {"alg": "HS256"}
         payload = {"user_id": self.id}
-        args = (header, payload, app.config["SECRET_KEY"])
+        args = (header, payload, current_app.config["SECRET_KEY"])
         return jwt.encode(*args).decode("utf-8")
 
     @staticmethod
     def verify_reset_token(token):
         try:
-            user_id=jwt.decode(token, app.config["SECRET_KEY"])["user_id"]
+            user_id=jwt.decode(token, current_app.config["SECRET_KEY"])[
+                "user_id"]
         except JoseError:
             return None
         return User.query.get(user_id)
