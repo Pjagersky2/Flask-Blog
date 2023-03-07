@@ -1,7 +1,8 @@
 from datetime import datetime
 
 from flask_login import UserMixin
-from itsdangerous import TimedSerializer as Serializer
+from authlib.jose import jwt
+from authlib.jose.errors import JoseError
 
 from flaskblog import app, db, login_manager
 
@@ -28,9 +29,18 @@ class User(db.Model, UserMixin):
         Creates a password reset token.
         """
 
-        s = Serializer(app.config["SECRET_KEY"], expires_sec)
-        return s.dumps({"user_id": self.id}).decode("utf-8")
+        header = {"alg": "HS256"}
+        payload = {"user_id": self.id}
+        args = (header, payload, app.config["SECRET_KEY"])
+        return jwt.encode(*args).decode("utf-8")
 
+    @staticmethod
+    def verify_reset_token(token):
+        try:
+            user_id=jwt.decode(token, app.config["SECRET_KEY"])["user_id"]
+        except JoseError:
+            return None
+        return User.query.get(user_id)
 
     def __repr__(self):
         """
