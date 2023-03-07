@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from flask_login import UserMixin
 from authlib.jose import jwt
 from authlib.jose.errors import JoseError
+from flask_login import UserMixin
 
 from flaskblog import app, db, login_manager
 
