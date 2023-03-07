@@ -34,14 +34,14 @@ def save_picture(form_picture) -> str:
     return picture_fn
 
 
-def send_reset_email(user):
+def send_reset_email(user, base_url="http://localhost:5000"):
     token = user.get_reset_token()
     msg = Message("Password Reset Request",
                   sender="noreply@test.com",
                   recipients=[user.email])
     msg.body = f"""
     To reset your password, please visit the following link: 
-{url_for("users.reset_token", token=token, external=True)}
+{base_url}{url_for("users.reset_token", token=token, external=True)}
 
 If you did not make this request then ignore this email and no changes will 
 be made.
