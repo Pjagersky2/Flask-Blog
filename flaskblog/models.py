@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from flask import current_app
 from authlib.jose import jwt
@@ -21,7 +22,7 @@ class User(db.Model, UserMixin):
 
     posts = db.relationship("Post", backref="author", lazy=True)
 
-    def get_reset_token(self):
+    def get_reset_token(self, expires=120):
         """
         Create password reset token.
 
@@ -29,18 +30,22 @@ class User(db.Model, UserMixin):
         """
 
         header = {"alg": "HS256"}
-        payload = {"user_id": self.id}
+        payload = {
+            "user_id": self.id,
+            "expires": int(time.time()) + expires
+        }
         args = (header, payload, current_app.config["SECRET_KEY"])
         return jwt.encode(*args).decode("utf-8")
 
     @staticmethod
     def verify_reset_token(token):
         try:
-            user_id=jwt.decode(token, current_app.config["SECRET_KEY"])[
-                "user_id"]
+            deserialized = jwt.decode(token, current_app.config["SECRET_KEY"])
         except JoseError:
             return None
-        return User.query.get(user_id)
+
+        if int(time.time()) < deserialized["expires"]:
+            return User.query.get(deserialized["user_id"])
 
     def __repr__(self):
         """
