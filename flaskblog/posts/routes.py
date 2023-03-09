@@ -1,10 +1,10 @@
 from flask import (Blueprint,
                    abort,
-                   render_template,
-                   url_for,
                    flash,
                    redirect,
-                   request)
+                   render_template,
+                   request,
+                   url_for)
 from flaskblog import db
 from flask_login import current_user, login_required
 from flaskblog.models import Post
